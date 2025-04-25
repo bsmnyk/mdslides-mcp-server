@@ -34,5 +34,8 @@ COPY src/ ./src/
 # Add the virtual environment's bin directory to the PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Copy the README file
+COPY README.md /app/README.md
+
 # Run mkslides_server.py when the container launches
 ENTRYPOINT ["python", "src/mkslides_mcp_server/server.py"]

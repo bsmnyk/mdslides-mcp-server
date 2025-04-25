@@ -187,5 +187,34 @@ Notes:
 
     return os.path.abspath(output_dir)
 
+@mcp.resource(uri="file:///readme")
+def get_readme():
+    """
+    Returns the contents of the README.md file.
+
+    This resource provides documentation about the mkslides-mcp-server,
+    including installation instructions, usage examples, and other information.
+
+    Returns:
+        str: The contents of the README.md file.
+    """
+    try:
+        # First try to read from the project root
+        readme_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "README.md")
+        if not os.path.exists(readme_path):
+            # Fallback to the Docker container path
+            readme_path = "/app/README.md"
+
+        logger.info(f"[Resource] Reading README from: {readme_path}")
+
+        with open(readme_path, "r") as f:
+            content = f.read()
+
+        logger.info(f"[Resource] Successfully read README ({len(content)} bytes)")
+        return content
+    except Exception as e:
+        logger.error(f"[Error] Failed to read README: {e}")
+        return f"Error: Could not read README.md: {str(e)}"
+
 if __name__ == "__main__":
     mcp.run()
