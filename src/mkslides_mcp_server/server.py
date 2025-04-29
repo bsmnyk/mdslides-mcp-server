@@ -4,6 +4,10 @@ import tempfile
 import json
 import yaml
 import logging
+import http.server
+import socketserver
+import threading
+import shutil
 from typing import Optional, Dict, Any
 
 from mcp.server.fastmcp import FastMCP
@@ -11,6 +15,48 @@ from mcp.server.fastmcp import FastMCP
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
+
+# Global variable to hold the server thread
+server_thread = None
+server_port = 8080
+output_base_dir = "/app/mkslides_output"
+latest_output_dir = os.path.join(output_base_dir, "latest")
+
+# Custom HTTP request handler to serve from a specific directory
+class SlidesHTTPHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        # Set the directory to serve from
+        super().__init__(*args, directory=output_base_dir, **kwargs)
+
+    def log_message(self, format, *args):
+        # Suppress HTTP server logs unless they are errors
+        if args[1] != '200':
+            logger.info(f"[HTTP Server] {format % args}")
+
+def start_server_in_thread():
+    global server_thread
+    if server_thread is not None and server_thread.is_alive():
+        logger.info("[Setup] HTTP server is already running.")
+        return
+
+    # Ensure the base output directory exists before starting the server
+    os.makedirs(output_base_dir, exist_ok=True)
+    logger.info(f"[Setup] Ensuring base output directory exists for HTTP server: {output_base_dir}")
+
+    # Use ThreadingTCPServer to allow multiple requests
+    # Allow address reuse to prevent "Address already in use" errors on restart
+    socketserver.TCPServer.allow_reuse_address = True
+    handler = SlidesHTTPHandler
+    try:
+        httpd = socketserver.TCPServer(("", server_port), handler)
+        logger.info(f"[Setup] Starting HTTP server on port {server_port}...")
+        server_thread = threading.Thread(target=httpd.serve_forever)
+        server_thread.daemon = True  # Allow the main program to exit even if the thread is running
+        server_thread.start()
+        logger.info("[Setup] HTTP server started in background thread.")
+    except Exception as e:
+        logger.error(f"[Error] Failed to start HTTP server: {e}")
+        # Optionally, re-raise or handle the error appropriately
 
 # Create an MCP server instance
 mcp = FastMCP("MkSlides Server", dependencies=["mkslides"])
@@ -41,8 +87,8 @@ def generate_slides(
             available options.
 
     Returns:
-        str: Absolute path to the output directory containing the generated HTML slides.
-            The main presentation file will be named 'index.html' within this directory.
+        str: A URL to view the generated HTML slides. The slides are served from an
+            internal HTTP server accessible via the mapped host port.
 
     Raises:
         ValueError: If markdown_content is empty or not provided.
@@ -55,22 +101,24 @@ def generate_slides(
 Examples:
     Basic usage with minimal options:
     ```python
-    output_path = generate_slides(
+    slides_url = generate_slides(
         markdown_content="# My Presentation\n\n---\n\n## Slide 2\n\nContent"
     )
+    # Open slides_url in a browser
     ```
 
     Using a custom theme:
     ```python
-    output_path = generate_slides(
+    slides_url = generate_slides(
         markdown_content="# Themed Presentation\n\n---\n\n## Content",
         slides_theme="black"
     )
+    # Open slides_url in a browser
     ```
 
     Advanced configuration with Reveal.js options:
     ```python
-    output_path = generate_slides(
+    slides_url = generate_slides(
         markdown_content="# Advanced Presentation\n\n---\n\n## Content",
         revealjs_options={
             "transition": "slide",
@@ -78,13 +126,15 @@ Examples:
             "progress": True
         }
     )
+    # Open slides_url in a browser
     ```
 
 Notes:
     - The function creates temporary files for the markdown content and configuration,
       which are automatically cleaned up after execution.
     - All operations are logged with appropriate log levels for debugging.
-    - The generated slides can be viewed by opening the index.html file in a web browser.
+    - The generated slides are served from an internal HTTP server. Ensure the server
+      port (default 8080) is mapped correctly when running the Docker container.
 """
     if not markdown_content:
         logger.error("[Error] markdown_content was not provided.")
@@ -125,13 +175,21 @@ Notes:
         logger.info(f"[Setup] Created temporary config file: {temp_config_file.name}")
         logger.info(f"[Setup] Config content: {json.dumps(config, indent=2)}")
 
-    # Ensure output directory exists
-    output_dir = "./mkslides_output" # Hardcode output directory
-    os.makedirs(output_dir, exist_ok=True)
-    logger.info(f"[Setup] Ensuring output directory exists: {output_dir}")
+    # Ensure the latest output directory exists and is empty
+    if os.path.exists(latest_output_dir):
+        shutil.rmtree(latest_output_dir)
+        logger.info(f"[Setup] Cleared previous output directory: {latest_output_dir}")
+    os.makedirs(latest_output_dir, exist_ok=True)
+    logger.info(f"[Setup] Ensuring output directory exists: {latest_output_dir}")
 
     # Build the mkslides command
-    command = ["mkslides", "build", input_path, "-d", output_dir] + config_arg
+    # mkslides builds into a subdirectory named after the input file (without extension)
+    # We want the output directly in latest_output_dir, so we build to a temp dir
+    # and then move the contents.
+    temp_build_dir = tempfile.mkdtemp()
+    logger.info(f"[Setup] Created temporary build directory: {temp_build_dir}")
+
+    command = ["mkslides", "build", input_path, "-d", temp_build_dir] + config_arg
 
     logger.info(f"[API] Executing mkslides build command: {' '.join(command)}")
 
@@ -143,6 +201,25 @@ Notes:
              logger.warning(f"[API] mkslides build stderr:\n{result.stderr}")
 
         logger.info(f"[API] mkslides build completed successfully.")
+
+        # Log contents of the temporary build directory to verify structure
+        logger.info(f"[Setup] Contents of temporary build directory ({temp_build_dir}): {os.listdir(temp_build_dir)}")
+
+        # Move the generated files directly from the temp build dir to the latest output dir
+        # Based on user feedback, mkslides places output directly in the target directory.
+        try:
+            for item in os.listdir(temp_build_dir):
+                source_item_path = os.path.join(temp_build_dir, item)
+                destination_item_path = os.path.join(latest_output_dir, item)
+                shutil.move(source_item_path, destination_item_path)
+                logger.info(f"[Setup] Moved '{item}' from {temp_build_dir} to {latest_output_dir}")
+            logger.info(f"[Setup] Successfully moved all generated files to {latest_output_dir}")
+
+        except Exception as e:
+            logger.error(f"[Error] Failed to move generated files from {temp_build_dir} to {latest_output_dir}: {e}")
+            # Re-raise the exception to indicate failure
+            raise RuntimeError(f"Failed to move generated files: {e}")
+
 
     except subprocess.CalledProcessError as e:
         logger.error(f"[Error] mkslides build failed with exit code {e.returncode}")
@@ -156,15 +233,21 @@ Notes:
         logger.error(f"[Error] An unexpected error occurred during mkslides build: {e}")
         raise RuntimeError(f"An unexpected error occurred during mkslides build: {e}")
     finally:
-        # Clean up temporary files
+        # Clean up temporary files and directories
         if temp_md_file and os.path.exists(temp_md_file.name):
             os.remove(temp_md_file.name)
             logger.info(f"[Setup] Cleaned up temporary markdown file: {temp_md_file.name}")
         if temp_config_file and os.path.exists(temp_config_file.name):
             os.remove(temp_config_file.name)
             logger.info(f"[Setup] Cleaned up temporary config file: {temp_config_file.name}")
+        if os.path.exists(temp_build_dir):
+            shutil.rmtree(temp_build_dir)
+            logger.info(f"[Setup] Cleaned up temporary build directory: {temp_build_dir}")
 
-    return os.path.abspath(output_dir)
+
+    # Return the URL to the generated slides
+    # Assuming the server is accessible on localhost at server_port
+    return f"http://localhost:{server_port}/latest/index.html"
 
 @mcp.resource(uri="file:///readme")
 def get_readme():
@@ -226,4 +309,5 @@ def get_creating_slides_docs():
         return f"Error: Could not read creating_slides.md: {str(e)}"
 
 if __name__ == "__main__":
+    start_server_in_thread()
     mcp.run()

@@ -40,5 +40,8 @@ COPY README.md /app/README.md
 # Copy the docs directory
 COPY docs/ ./docs/
 
+# Expose the port for the HTTP server
+EXPOSE 8080
+
 # Run mkslides_server.py when the container launches
 ENTRYPOINT ["python", "src/mkslides_mcp_server/server.py"]
