@@ -6,6 +6,9 @@ An MCP (Model Context Protocol) server for generating HTML slides from Markdown 
 
 This server provides a simple interface to the `mkslides` command-line tool, allowing you to generate presentation slides directly from Markdown input via the Model Context Protocol. This enables integration with tools like Claude in VSCode to easily create and manage presentations.
 
+## Demo
+[mcp-demo.webm](https://github.com/user-attachments/assets/7a541e5e-2509-4a16-a007-f423dc65df05)
+
 ## Features
 
 *   Generate HTML slides from Markdown.
