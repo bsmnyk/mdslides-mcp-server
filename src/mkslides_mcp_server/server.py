@@ -18,39 +18,27 @@ mcp = FastMCP("MkSlides Server", dependencies=["mkslides"])
 
 @mcp.tool()
 def generate_slides(
-    markdown_content: str,  # Now required, not Optional
-    output_dir: str = "./mkslides_output",
-    config_json: Optional[Dict[str, Any]] = None,  # New parameter
+    markdown_content: str,
     slides_theme: Optional[str] = None,
     slides_highlight_theme: Optional[str] = None,
     revealjs_options: Optional[Dict[str, Any]] = None,
-    strict: bool = False,
 ) -> str:
     """
     Generates HTML presentation slides from Markdown content using the mkslides library.
 
     This tool converts raw Markdown text into a complete HTML presentation using the
     mkslides build system, which is powered by Reveal.js. The generated slides are
-    saved to the specified output directory.
+    saved to the default output directory "./mkslides_output".
 
     Args:
         markdown_content (str): Required. Raw Markdown text for the slides. Must include
             valid mkslides markdown syntax with slide separators (---).
-        output_dir (str, optional): Directory path where the generated HTML slides will be saved.
-            Defaults to "./mkslides_output". The directory will be created if it doesn't exist.
-        config_json (Dict[str, Any], optional): Complete mkslides configuration as a JSON object.
-            If provided, this overrides the individual config options (slides_theme,
-            slides_highlight_theme, revealjs_options). Use this for advanced configuration.
         slides_theme (str, optional): Theme name for the slides. This overrides the default
             theme in mkslides. Common values include "black", "white", "league", etc.
-            Only applied if config_json doesn't contain a 'slides.theme' setting.
         slides_highlight_theme (str, optional): Syntax highlighting theme for code blocks.
-            Only applied if config_json doesn't contain a 'slides.highlight_theme' setting.
         revealjs_options (Dict[str, Any], optional): Dictionary of Reveal.js configuration options
             to merge with or override the default settings. See Reveal.js documentation for
-            available options. Only applied if config_json doesn't contain 'revealjs' settings.
-        strict (bool, optional): When True, enables strict mode for mkslides build process,
-            which will fail on warnings. Defaults to False.
+            available options.
 
     Returns:
         str: Absolute path to the output directory containing the generated HTML slides.
@@ -59,7 +47,7 @@ def generate_slides(
     Raises:
         ValueError: If markdown_content is empty or not provided.
         RuntimeError: If the mkslides build command fails. This could happen if:
-            - The mkslides command is not installed or not in PATH
+            - The mkslides command is not installed or not in the PATH
             - The markdown content contains syntax errors
             - There are issues with the configuration options
             - The output directory cannot be created or written to
@@ -72,11 +60,10 @@ Examples:
     )
     ```
 
-    Using a custom theme and output directory:
+    Using a custom theme:
     ```python
     output_path = generate_slides(
         markdown_content="# Themed Presentation\n\n---\n\n## Content",
-        output_dir="./custom_slides",
         slides_theme="black"
     )
     ```
@@ -114,14 +101,11 @@ Notes:
     config_arg = []
 
     # Handle configuration
-    if config_json or slides_theme or slides_highlight_theme or revealjs_options:
-        # Start with config_json if provided, otherwise empty dict
-        config = config_json.copy() if config_json else {}
-        
-        # Only apply individual overrides if config_json doesn't already have these sections
-        if not config_json or 'slides' not in config_json:
-            if 'slides' not in config:
-                config['slides'] = {}
+    if slides_theme or slides_highlight_theme or revealjs_options:
+        config = {}
+
+        if slides_theme or slides_highlight_theme:
+            config['slides'] = {}
             if slides_theme:
                 config['slides']['theme'] = slides_theme
                 logger.info(f"[Setup] Setting slides theme: {slides_theme}")
@@ -129,13 +113,9 @@ Notes:
                 config['slides']['highlight_theme'] = slides_highlight_theme
                 logger.info(f"[Setup] Setting slides highlight theme: {slides_highlight_theme}")
 
-        if not config_json or 'revealjs' not in config_json:
-            if 'revealjs' not in config:
-                config['revealjs'] = {}
-            if revealjs_options:
-                # Merge revealjs_options
-                config['revealjs'].update(revealjs_options)
-                logger.info(f"[Setup] Setting Reveal.js options: {revealjs_options}")
+        if revealjs_options:
+            config['revealjs'] = revealjs_options
+            logger.info(f"[Setup] Setting Reveal.js options: {revealjs_options}")
 
         # Create a temporary config file
         temp_config_file = tempfile.NamedTemporaryFile(mode='w+', suffix=".yml", delete=False)
@@ -146,13 +126,12 @@ Notes:
         logger.info(f"[Setup] Config content: {json.dumps(config, indent=2)}")
 
     # Ensure output directory exists
+    output_dir = "./mkslides_output" # Hardcode output directory
     os.makedirs(output_dir, exist_ok=True)
     logger.info(f"[Setup] Ensuring output directory exists: {output_dir}")
 
     # Build the mkslides command
     command = ["mkslides", "build", input_path, "-d", output_dir] + config_arg
-    if strict:
-        command.append("-s")
 
     logger.info(f"[API] Executing mkslides build command: {' '.join(command)}")
 

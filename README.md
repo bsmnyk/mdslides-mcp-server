@@ -100,12 +100,9 @@ Generates HTML slides from Markdown input using mkslides.
 **Parameters:**
 
 *   `markdown_content` (string, **required**): Raw Markdown text for the slides.
-*   `output_dir` (string, optional, default: `./mkslides_output`): Directory to save the generated HTML slide(s). This path is relative to the server's working directory (or the mounted volume inside the Docker container).
-*   `config_json` (object, optional): Complete configuration as a JSON object. This overrides other individual config options (`slides_theme`, `slides_highlight_theme`, `revealjs_options`).
-*   `slides_theme` (string, optional): Override the `slides.theme` setting from the mkslides configuration.
-*   `slides_highlight_theme` (string, optional): Override the `slides.highlight_theme` setting from the mkslides configuration.
+*   `slides_theme` (string, optional): Theme name for the slides. This overrides the default theme in mkslides.
+*   `slides_highlight_theme` (string, optional): Syntax highlighting theme for code blocks.
 *   `revealjs_options` (object, optional): A dictionary containing Reveal.js config options to merge/override the `revealjs` section of the mkslides configuration.
-*   `strict` (boolean, optional, default: `false`): Corresponds to the `--strict` flag in `mkslides build`.
 
 **Example Usage:**
 
@@ -116,7 +113,6 @@ Generates HTML slides from Markdown input using mkslides.
 <arguments>
 {
   "markdown_content": "# My Presentation\n\n---\n\n## Slide 2\n\n- Bullet 1\n- Bullet 2",
-  "output_dir": "./my_slides",
   "slides_theme": "black",
   "revealjs_options": {
     "transition": "slide"
@@ -126,7 +122,7 @@ Generates HTML slides from Markdown input using mkslides.
 </use_mcp_tool>
 ```
 
-This will generate the slides in the `./my_slides` directory (relative to the server's output directory) using the 'black' theme and a 'slide' transition.
+This will generate the slides in the default output directory (`./mkslides_output`) using the 'black' theme and a 'slide' transition.
 
 ## Development
 
