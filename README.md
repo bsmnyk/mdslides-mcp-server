@@ -42,10 +42,12 @@ This server provides a simple interface to the `mkslides` command-line tool, all
 
 #### Using Docker
 
-1.  Build the Docker image from the repository root:
+1.  Ensure Docker is installed and running.
+2.  From the repository root, run the deployment script:
     ```bash
-    docker build -t mkslides-mcp-server:latest .
+    ./deploy_mkslides_docker.sh
     ```
+    This script will build the Docker image (if not already built) and start a container instance named `mkslides-mcp-instance`. The server inside the container will be running and ready to accept connections via MCP. The script also handles creating the necessary output directory (`./mkslides_output`) on the host.
 
 ### Configuration in MCP Settings
 
@@ -66,28 +68,27 @@ If you installed using pip, you can run the server directly:
 }
 ```
 
-If you built the Docker image, you can configure it to run the container:
+If you are using the Docker deployment via the script:
+
+Configure your MCP client to attach to the running container instance:
 
 ```json
 {
   "mcpServers": {
     "mkslides-mcp-local": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
       "command": "docker",
       "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-v",
-        "/path/to/your/output:/app/mkslides_output", // IMPORTANT: Replace with your desired output path
-        "mkslides-mkslides-server:latest"
+        "attach",
+        "mkslides-mcp-instance"
       ],
-      "disabled": false,
-      "autoApprove": []
+      "transportType": "stdio"
     }
   }
 }
 ```
-**Note:** Ensure the volume mount path (`/path/to/your/output`) is correctly set to a directory on your host machine where you want the generated slides to be saved. The server will save files to `/app/mkslides_output` inside the container, which is mapped to your host path.
 
 ## Usage with Claude/VSCode
 
@@ -95,14 +96,18 @@ Once configured in your MCP settings, you can use the `generate_slides` tool dir
 
 ### Available Tool: `generate_slides`
 
-Generates HTML slides from Markdown input using mkslides.
+Generates HTML presentation slides from Markdown input using mkslides and serves them via a local HTTP server.
 
 **Parameters:**
 
 *   `markdown_content` (string, **required**): Raw Markdown text for the slides.
-*   `slides_theme` (string, optional): Theme name for the slides. This overrides the default theme in mkslides.
-*   `slides_highlight_theme` (string, optional): Syntax highlighting theme for code blocks.
-*   `revealjs_options` (object, optional): A dictionary containing Reveal.js config options to merge/override the `revealjs` section of the mkslides configuration.
+*   `slides_theme` (string, optional): Theme name for the slides (e.g., `black`, `white`, `league`, `beige`, `night`, `serif`, `simple`, `solarized`, `moon`, `dracula`, `sky`, `blood`). Overrides the default.
+*   `slides_highlight_theme` (string, optional): Syntax highlighting theme for code blocks (any built-in theme from `highlight.js`).
+*   `revealjs_options` (object, optional): A dictionary containing Reveal.js config options to merge/override defaults.
+
+**Returns:**
+
+*   (string): A URL (e.g., `http://localhost:8080/latest/index.html`) pointing to the generated HTML slides served by the MCP server's internal HTTP server. You can open this URL in your browser.
 
 **Example Usage:**
 

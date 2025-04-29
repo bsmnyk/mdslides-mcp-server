@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Global variable to hold the server thread
 server_thread = None
 server_port = 8080
-output_base_dir = "/app/mkslides_output"
+output_base_dir = "./mkslides_output"
 latest_output_dir = os.path.join(output_base_dir, "latest")
 
 # Custom HTTP request handler to serve from a specific directory
@@ -71,70 +71,50 @@ def generate_slides(
 ) -> str:
     """
     Generates HTML presentation slides from Markdown content using the mkslides library.
-
-    This tool converts raw Markdown text into a complete HTML presentation using the
-    mkslides build system, which is powered by Reveal.js. The generated slides are
-    saved to the default output directory "./mkslides_output".
+    This tool converts raw Markdown text into a complete HTML presentation using Reveal.js
+    and serves it via a local HTTP server.
 
     Args:
         markdown_content (str): Required. Raw Markdown text for the slides. Must include
-            valid mkslides markdown syntax with slide separators (---).
-        slides_theme (str, optional): Theme name for the slides. This overrides the default
-            theme in mkslides. Common values include "black", "white", "league", etc.
+            valid markdown syntax with slide separators (---).
+        slides_theme (str, optional): Theme name for the slides. Overrides the default
+            theme in mkslides. Available options: black, white, league, beige, night,
+            serif, simple, solarized, moon, dracula, sky, blood.
         slides_highlight_theme (str, optional): Syntax highlighting theme for code blocks.
+            Accepts any built-in theme name from highlight.js (e.g., 'github', 'monokai').
         revealjs_options (Dict[str, Any], optional): Dictionary of Reveal.js configuration options
-            to merge with or override the default settings. See Reveal.js documentation for
-            available options.
+            to merge with or override the default settings.
 
     Returns:
-        str: A URL to view the generated HTML slides. The slides are served from an
-            internal HTTP server accessible via the mapped host port.
+        str: A URL to view the generated HTML slides (e.g., http://localhost:8080/latest/index.html).
+            The slides are served from an internal HTTP server accessible via the mapped host port.
 
     Raises:
         ValueError: If markdown_content is empty or not provided.
-        RuntimeError: If the mkslides build command fails. This could happen if:
-            - The mkslides command is not installed or not in the PATH
-            - The markdown content contains syntax errors
-            - There are issues with the configuration options
-            - The output directory cannot be created or written to
+        RuntimeError: If the mkslides build command fails.
+    Examples:
+        Basic usage with minimal options:
+        ```python
+        slides_url = generate_slides(
+            markdown_content="# My Presentation\n\n---\n\n## Slide 2\n\nContent"
+        )
+        # Open slides_url in a browser
+        ```
 
-Examples:
-    Basic usage with minimal options:
-    ```python
-    slides_url = generate_slides(
-        markdown_content="# My Presentation\n\n---\n\n## Slide 2\n\nContent"
-    )
-    # Open slides_url in a browser
-    ```
-
-    Using a custom theme:
-    ```python
-    slides_url = generate_slides(
-        markdown_content="# Themed Presentation\n\n---\n\n## Content",
-        slides_theme="black"
-    )
-    # Open slides_url in a browser
-    ```
-
-    Advanced configuration with Reveal.js options:
-    ```python
-    slides_url = generate_slides(
-        markdown_content="# Advanced Presentation\n\n---\n\n## Content",
-        revealjs_options={
-            "transition": "slide",
-            "controls": True,
-            "progress": True
-        }
-    )
-    # Open slides_url in a browser
-    ```
-
-Notes:
-    - The function creates temporary files for the markdown content and configuration,
-      which are automatically cleaned up after execution.
-    - All operations are logged with appropriate log levels for debugging.
-    - The generated slides are served from an internal HTTP server. Ensure the server
-      port (default 8080) is mapped correctly when running the Docker container.
+        Advanced configuration with theme and Reveal.js options:
+        ```python
+        slides_url = generate_slides(
+            markdown_content="# Advanced Presentation\n\n---\n\n## Content",
+            slides_theme="dracula",
+            slides_highlight_theme="monokai",
+            revealjs_options={
+                "transition": "slide",
+                "controls": True,
+                "progress": True
+            }
+        )
+        # Open slides_url in a browser
+        ```
 """
     if not markdown_content:
         logger.error("[Error] markdown_content was not provided.")
@@ -183,7 +163,6 @@ Notes:
     logger.info(f"[Setup] Ensuring output directory exists: {latest_output_dir}")
 
     # Build the mkslides command
-    # mkslides builds into a subdirectory named after the input file (without extension)
     # We want the output directly in latest_output_dir, so we build to a temp dir
     # and then move the contents.
     temp_build_dir = tempfile.mkdtemp()
