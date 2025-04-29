@@ -44,4 +44,4 @@ COPY docs/ ./docs/
 EXPOSE 8080
 
 # Run mkslides_server.py when the container launches
-ENTRYPOINT ["python", "src/mkslides_mcp_server/server.py"]
+ENTRYPOINT ["python", "src/mdslides_mcp_server/server.py"]

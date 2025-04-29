@@ -7,11 +7,11 @@ from unittest.mock import patch, MagicMock
 # Add the src directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from mkslides_mcp_server import server
+from mdslides_mcp_server import server
 
 
-class TestMkSlidesMCPServer(unittest.TestCase):
-    """Tests for the MkSlides MCP Server."""
+class TestMdSlidesMCPServer(unittest.TestCase):
+    """Tests for the MdSlides MCP Server."""
 
     def test_generate_slides_requires_markdown_content(self):
         """Test that generate_slides raises ValueError when markdown_content is not provided."""

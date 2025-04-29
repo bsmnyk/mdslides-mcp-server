@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # --- Configuration ---
-IMAGE_NAME="mkslides-mcp-server"
+IMAGE_NAME="mdslides-mcp-server"
 TAG="latest"
-CONTAINER_NAME="mkslides-mcp-instance"
-SOURCE_DIR="src/mkslides_mcp_server"
+CONTAINER_NAME="mdslides-mcp-instance"
+SOURCE_DIR="src/mdslides_mcp_server"
 # OUTPUT_DIR="./mkslides_output" # Host path
 CONTAINER_OUTPUT_DIR="/app/mkslides_output" # Container path
 HTTP_INTERNAL_PORT=8080 # HTTP server port

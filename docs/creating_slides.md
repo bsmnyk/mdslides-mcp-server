@@ -2,9 +2,9 @@
 title: Creating Slides
 ---
 
-# Creating Slides with MkSlides
+# Creating Slides with MdSlides
 
-MkSlides allows you to create presentations using simple Markdown syntax. This document covers the basic structure and formatting options available using MkSlides' built-in features, focusing on the Markdown source itself rather than advanced Reveal.js configurations or plugins.
+MdSlides allows you to create presentations using simple Markdown syntax. This document covers the basic structure and formatting options available using MdSlides' built-in features, focusing on the Markdown source itself rather than advanced Reveal.js configurations or plugins.
 
 ---
 
@@ -87,7 +87,7 @@ Standard Markdown formatting works within your slides:
     *   Blocks: Use fenced code blocks with optional language identifiers for syntax highlighting (theme depends on `highlight_theme` config).
         \`\`\`python
         def hello():
-            print("Hello, MkSlides!")
+            print("Hello, MdSlides!")
         \`\`\`
 *   **Links:** `[Link Text](https://example.com)`
 *   **Images:** `![Alt Text](path/to/image.jpg)` or `![Alt Text](https://url/to/image.png)`
@@ -121,7 +121,7 @@ This presentation uses the Solarized theme.
 
 ## Emoji Support :rocket:
 
-MkSlides supports standard emoji shortcodes. Just include them in your Markdown! :tada: :smile:
+MdSlides supports standard emoji shortcodes. Just include them in your Markdown! :tada: :smile:
 
 **Example:**
 
@@ -133,10 +133,10 @@ This presentation is going to be awesome! :rocket:
 
 ## Advanced: Preprocessing Scripts
 
-For more complex modifications, MkSlides allows you to specify a `preprocess_script` in `mkslides.yml`. This points to a Python script containing a `preprocess` function that takes the raw Markdown string as input and returns a modified string. This can be used for tasks like custom text replacements, dynamic content injection, or other automated modifications before the Markdown is converted to HTML. Refer to the main configuration documentation for details.
+For more complex modifications, MdSlides allows you to specify a `preprocess_script` in `mkslides.yml`. This points to a Python script containing a `preprocess` function that takes the raw Markdown string as input and returns a modified string. This can be used for tasks like custom text replacements, dynamic content injection, or other automated modifications before the Markdown is converted to HTML. Refer to the main configuration documentation for details.
 
 ---
 
 ## Summary
 
-Using these basic Markdown features and MkSlides' separators, you can create well-structured and formatted presentations. For more advanced layouts, animations, themes, and plugin integrations, consult the Reveal.js documentation and the MkSlides configuration options related to `revealjs` and `plugins`.
+Using these basic Markdown features and MdSlides' separators, you can create well-structured and formatted presentations. For more advanced layouts, animations, themes, and plugin integrations, consult the Reveal.js documentation and the MdSlides configuration options related to `revealjs` and `plugins`.

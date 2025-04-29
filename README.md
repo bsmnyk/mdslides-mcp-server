@@ -1,4 +1,4 @@
-# mkslides-mcp-server
+# mdslides-mcp-server
 
 An MCP (Model Context Protocol) server for generating HTML slides from Markdown content using the [mkslides](https://github.com/saoudrizwan/mkslides) library.
 
@@ -28,9 +28,9 @@ This server provides a simple interface to the `mkslides` command-line tool, all
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/your-repo/mkslides-mcp-server.git # Replace with actual repo URL
-    cd mkslides-mcp-server
-    ```
+git clone https://github.com/your-repo/mdslides-mcp-server.git # Replace with actual repo URL
+cd mdslides-mcp-server
+```
 2.  Install using pip and uv (recommended):
     ```bash
     uv sync
@@ -45,9 +45,9 @@ This server provides a simple interface to the `mkslides` command-line tool, all
 1.  Ensure Docker is installed and running.
 2.  From the repository root, run the deployment script:
     ```bash
-    ./deploy_mkslides_docker.sh
-    ```
-    This script will build the Docker image (if not already built) and start a container instance named `mkslides-mcp-instance`. The server inside the container will be running and ready to accept connections via MCP. The script also handles creating the necessary output directory (`./mkslides_output`) on the host.
+./deploy_mdslides_docker.sh
+```
+This script will build the Docker image (if not already built) and start a container instance named `mdslides-mcp-instance`. The server inside the container will be running and ready to accept connections via MCP. The script also handles creating the necessary output directory (`./mkslides_output`) on the host.
 
 ### Configuration in MCP Settings
 
@@ -58,9 +58,9 @@ If you installed using pip, you can run the server directly:
 ```json
 {
   "mcpServers": {
-    "mkslides-mcp-local": {
+    "mdslides-mcp-local": {
       "command": "python",
-      "args": ["src/mkslides_mcp_server/server.py"],
+      "args": ["src/mdslides_mcp_server/server.py"],
       "disabled": false,
       "autoApprove": []
     }
@@ -75,14 +75,14 @@ Configure your MCP client to attach to the running container instance:
 ```json
 {
   "mcpServers": {
-    "mkslides-mcp-local": {
+    "mdslides-mcp-local": {
       "autoApprove": [],
       "disabled": false,
       "timeout": 60,
       "command": "docker",
       "args": [
         "attach",
-        "mkslides-mcp-instance"
+        "mdslides-mcp-instance"
       ],
       "transportType": "stdio"
     }
@@ -113,7 +113,7 @@ Generates HTML presentation slides from Markdown input using mkslides and serves
 
 ```xml
 <use_mcp_tool>
-<server_name>mkslides-mcp-local</server_name>
+<server_name>mdslides-mcp-local</server_name>
 <tool_name>generate_slides</tool_name>
 <arguments>
 {

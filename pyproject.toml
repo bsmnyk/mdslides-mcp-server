@@ -1,5 +1,5 @@
 [project]
-name = "mkslides-mcp-server"
+name = "mdslides-mcp-server"
 version = "0.1.0"
 description = "MCP server for generating slides using mkslides"
 requires-python = ">=3.12"
@@ -19,6 +19,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"] # list of folders that contain the packages (["."])
-include = ["mkslides_mcp_server*"] # package names should match these glob patterns (["*"])
+include = ["mdslides_mcp_server*"] # package names should match these glob patterns (["*"])
 # exclude = [] # exclude packages matching these glob patterns ([] )
 # namespaces = false # to disable scanning PEP 420 namespaces (true)
