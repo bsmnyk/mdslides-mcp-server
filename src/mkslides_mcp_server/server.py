@@ -249,65 +249,6 @@ Notes:
     # Assuming the server is accessible on localhost at server_port
     return f"http://localhost:{server_port}/latest/index.html"
 
-@mcp.resource(uri="file:///readme")
-def get_readme():
-    """
-    Returns the contents of the README.md file.
-
-    This resource provides documentation about the mkslides-mcp-server,
-    including installation instructions, usage examples, and other information.
-
-    Returns:
-        str: The contents of the README.md file.
-    """
-    try:
-        # First try to read from the project root
-        readme_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "README.md")
-        if not os.path.exists(readme_path):
-            # Fallback to the Docker container path
-            readme_path = "/app/README.md"
-
-        logger.info(f"[Resource] Reading README from: {readme_path}")
-
-        with open(readme_path, "r") as f:
-            content = f.read()
-
-        logger.info(f"[Resource] Successfully read README ({len(content)} bytes)")
-        return content
-    except Exception as e:
-        logger.error(f"[Error] Failed to read README: {e}")
-        return f"Error: Could not read README.md: {str(e)}"
-
-@mcp.resource(uri="file:///docs/creating_slides")
-def get_creating_slides_docs():
-    """
-    Returns the contents of the creating_slides.md documentation.
-
-    This resource provides comprehensive documentation about creating slides with MkSlides,
-    including slide separation, formatting options, speaker notes, and other features.
-
-    Returns:
-        str: The contents of the creating_slides.md file.
-    """
-    try:
-        # First try to read from the project root
-        docs_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                "docs", "creating_slides.md")
-        if not os.path.exists(docs_path):
-            # Fallback to the Docker container path
-            docs_path = "/app/docs/creating_slides.md"
-
-        logger.info(f"[Resource] Reading Creating Slides docs from: {docs_path}")
-
-        with open(docs_path, "r") as f:
-            content = f.read()
-
-        logger.info(f"[Resource] Successfully read Creating Slides docs ({len(content)} bytes)")
-        return content
-    except Exception as e:
-        logger.error(f"[Error] Failed to read Creating Slides docs: {e}")
-        return f"Error: Could not read creating_slides.md: {str(e)}"
-
 if __name__ == "__main__":
     start_server_in_thread()
     mcp.run()
