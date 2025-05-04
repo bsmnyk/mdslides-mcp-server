@@ -31,9 +31,9 @@ This server provides a simple interface to the `mkslides` command-line tool, all
 
 1.  Clone the repository:
     ```bash
-git clone https://github.com/your-repo/mdslides-mcp-server.git # Replace with actual repo URL
-cd mdslides-mcp-server
-```
+    git clone https://github.com/your-repo/mdslides-mcp-server.git
+    cd mdslides-mcp-server
+    ```
 2.  Install using pip and uv (recommended):
     ```bash
     uv sync
